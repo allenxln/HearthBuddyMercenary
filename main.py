@@ -4,6 +4,18 @@ import csv
 import json
 import sys
 
+import os
+
+# 获取当前文件所在目录
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# 将当前目录设置为起始路径
+os.chdir(current_dir)
+
+# 打印当前工作目录
+print(os.getcwd())
+
+
 
 #1.根据佣兵等级从低到高排。
 #2.根据任务等级从低到高排。

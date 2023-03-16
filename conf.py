@@ -15,10 +15,13 @@ class Conf:
         with open('./conf/instance.yml') as f:
             self.instance_conf = yaml.safe_load(f)
     
+    def get_mer_team_conf(self,mer_name):
+        return self.mer_conf['佣兵'][mer_name]
+    
     def print_mer(self):
-        print(type(self.mer_conf['佣兵']['拉格纳罗斯']['宝藏优选']))
-        print(len(self.mer_conf['佣兵']['拉格纳罗斯']['宝藏优选']))
-        print(self.mer_conf['佣兵']['拉格纳罗斯']['宝藏优选'])
+        print(type(self.mer_conf['佣兵']['拉格纳罗斯']['碎片来源']))
+        print(len(self.mer_conf['佣兵']['拉格纳罗斯']['碎片来源']))
+        print(self.mer_conf['佣兵']['拉格纳罗斯']['碎片来源'])
     
 #获取佣兵在队伍里面的配置
 def get_mer_team_conf(mer_name):
@@ -34,5 +37,5 @@ if __name__ == '__main__':
 
     base_conf = Conf()
     base_conf.print_mer()
-    print(base_conf)
+    print(base_conf.get_mer_team_conf('拉格纳罗斯'))
     
