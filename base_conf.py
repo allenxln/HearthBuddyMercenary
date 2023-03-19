@@ -33,11 +33,11 @@ class BaseConf:
     
     def get_mer_names_by_team_name(self, team_name):
         if  'ALL' == team_name:
-            return copy.deepcopy(self.base_conf['佣兵'].keys())
+            return [x for x in (self.base_conf['佣兵'].keys())]
         return copy.deepcopy(self.base_conf['队伍'][team_name])
     
     def get_teamnames(self):
-        return copy.deepcopy(self.base_conf['队伍'].keys())
+        return [x for x in self.base_conf['队伍'].keys()]
     
     def get_teamname_by_instance(self,instance):
         return copy.deepcopy(self.base_conf['地图'][instance])
@@ -89,20 +89,27 @@ class MercenariesInfo:
                 self.all_mer_stat[row[0]] = {'level': int(
                     row[1]), 'fragment': int(row[2]), 'task': int(row[3])}
             print('analysis_csv succ. {}->{}'.format(total_line,len(self.all_mer_stat)))
+
+    # 获取还没生成的佣兵
+    def get_no_mercenaries(self, orig_mers = []):
+        if  len(orig_mers) <= 0:
+            orig_mers = self.level_pro_mercenaries_lst
+        return [x for x in orig_mers if self.all_mer_stat[x]['level'] <= 0 and self.all_mer_stat[x]['fragment'] < 500]
     
-    def get_no_mercenaries(self):
-        # TODO:
-        return [x for x in self.level_pro_mercenaries_lst if self.all_mer_stat[x]['level'] <= 0 and self.all_mer_stat[x]['fragment'] < 500]
+    def get_less30_mercenaries(self, orig_mers = []):
+        if len(orig_mers) <= 0:
+            orig_mers = self.level_pro_mercenaries_lst
+        return [x for x in orig_mers if self.all_mer_stat[x]['level'] > 0 and self.all_mer_stat[x]['level'] < 30]
     
-    def get_less30_mercenaries(self):
-        # TODO:
-        return [x for x in self.level_pro_mercenaries_lst if self.all_mer_stat[x]['level'] > 0 and self.all_mer_stat[x]['level'] < 30]
+    def get_task_mercenaries(self, orig_mers = []):
+        if len(orig_mers) <= 0:
+            orig_mers = self.task_pro_mercenaries_lst
+        return [x for x in orig_mers if self.all_mer_stat[x]['task'] <= 7]
     
-    def get_task_mercenaries(self):
-        return [x for x in self.task_pro_mercenaries_lst if self.all_mer_stat[x]['task'] <= 7]
-    
-    def get_fragment_mercenaries(self):
-        return [x for x in self.fragment_pro_mercenaries_lst if self.all_mer_stat[x]['fragment'] <= 2700]
+    def get_fragment_mercenaries(self, orig_mers = []):
+        if len(orig_mers) <= 0:
+            orig_mers = self.fragment_pro_mercenaries_lst
+        return [x for x in orig_mers if self.all_mer_stat[x]['fragment'] <= 2700]
     
     def get_min_level(self, mercenaries_lst):
         return min([self.all_mer_stat[x]['level'] for x in mercenaries_lst])
@@ -110,24 +117,25 @@ class MercenariesInfo:
     def get_min_task(self, mercenaries_lst):
         return min([self.all_mer_stat[x]['task'] for x in mercenaries_lst])
     
-    # 获取队列里面没有合成的佣兵
-    def get_non_mer(self,mercenaries_lst = []):
-        if len(mercenaries_lst) <= 0:
-            mercenaries_lst = copy.deepcopy(self.level_pro_mercenaries_lst)
-        return [x for x in mercenaries_lst if self.all_mer_stat[x]['level'] <= 0]
-    
     #如果用户没有解锁目标副本，则先打目标副本的前置副本。
     # TODO: 当前按照默认全部解锁计算。需要用户可以打的副本
-    def get_first_instance_by_target_instance(target_instances_lst):
+    def get_first_instance_by_target_instance(self, target_instances_lst):
         # TODO: 这里要导入用户还未解锁的副本，以及所有副本的前置副本。 如果用户已经解锁 target_instance，则 first_instance 就等于 target_instance
         first_instance_lst = target_instances_lst
         return first_instance_lst
     
+    # 获取不存在的佣兵
+    def not_exist_mers(self, mer_names = []):
+        if len(mer_names) <= 0:
+            mer_names = [x for x in  self.all_mer_stat.keys()]
+        return [x for x in mer_names if self.get_min_level([x]) <= 0]
     
-    # 队伍是否ready了（1.是否全满级；2.任务7是否已完成。不关心是否 全+1+5）
-    def is_team_ready(self, team_name_lst):
-        mer_lst = self.get_mernames_by_teamname(team_name_lst)
-        return self.get_min_level(mer_lst) >= 30 and self.get_min_task(mer_lst) > 7
+    # 佣兵们是否ready了（1.是否全满级；2.任务7是否已完成。不关心是否 全+1+5）
+    def not_ready_mers(self, mer_names = []):
+        if len(mer_names) <= 0:
+            mer_names = [x for x in  self.all_mer_stat.keys()]
+        return [x for x in mer_names if self.get_min_level([x]) >= 30 and self.get_min_task([x]) > 7]
+    
 
     def __str__(self):
         return '\n'.join(self.all_mer_stat)
@@ -155,10 +163,10 @@ class ConfOut:
         self.instance_method = instance_method #“关卡”这个位置的字段。
         self.events = {'复活无阵亡': 3, '复活有阵亡': 10}  #事件和分值
         self.hit_method = hit_method #选怪模式
-        self.all_target = '货车 冷饮 祝踏岚 尤格 克洛 盖斯 大帝 欧莫克 奥妮克希亚幼龙 恩佐斯的鱼 德雷 拉佐格尔 女皇 加尔 雪崩 冰吼 碎片 巫师 宝宝 图腾 猫头鹰 安度因 艾萨拉 拉格 占卜 瓦莉拉 猎手 巨兽 战斗法师 防御者幼龙 雷矛羊骑兵 瞎眼 复仇 船长 指挥官 食人鱼 龙王 古尔丹 罗杰斯 休息 螳螂塑像 火山幼龙 塞林 火焰领主 雷矛特种兵 傀儡 始祖龟 奥秘 走私 酒吧醉汉 迦顿 维伦 反射 恐吓 剑鱼 雷矛 巨人 虚空 猛犸 雕像 冰雪 军需官 老瞎眼 冰霜暴怒者 图腾 奶牛 瓦拉 雷矛狂战士 小丑 暗月 恩佐斯 牛怪 奴隶 火焰驱逐者 迦罗娜 守卫 毒心者 雷矛防御者 女妖 将军'.split(' '), #集火目标，list格式
+        self.all_target = '货车 冷饮 祝踏岚 尤格 克洛 盖斯 大帝 欧莫克 奥妮克希亚幼龙 恩佐斯的鱼 德雷 拉佐格尔 女皇 加尔 雪崩 冰吼 碎片 巫师 宝宝 图腾 猫头鹰 安度因 艾萨拉 拉格 占卜 瓦莉拉 猎手 巨兽 战斗法师 防御者幼龙 雷矛羊骑兵 瞎眼 复仇 船长 指挥官 食人鱼 龙王 古尔丹 罗杰斯 休息 螳螂塑像 火山幼龙 塞林 火焰领主 雷矛特种兵 傀儡 始祖龟 奥秘 走私 酒吧醉汉 迦顿 维伦 反射 恐吓 剑鱼 雷矛 巨人 虚空 猛犸 雕像 冰雪 军需官 老瞎眼 冰霜暴怒者 图腾 奶牛 瓦拉 雷矛狂战士 小丑 暗月 恩佐斯 牛怪 奴隶 火焰驱逐者 迦罗娜 守卫 毒心者 雷矛防御者 女妖 将军'.split(' ') #集火目标，list格式
         self.avoid_mer = '精灵龙 塔姆辛 古尔丹 安度因 晨拥 塞林 沃金 米尔 安东尼 老瞎眼 伊利丹 雷矛 刀油 瓦莉拉'.split(' ')
         self.team_target_instances = {} #队伍设置内设置的目标关卡
-        self.extra_mer = {'绝命':1,'冰墙':0, '战棋':2,'黑棋':1,'宝珠':0,'冰块':0},
+        self.extra_mer = {'绝命':1,'冰墙':0, '战棋':2,'黑棋':1,'宝珠':0,'冰块':0}
         if len(default_team_name) > 0:
             self.add_mercenaries(self.mer_conf.get_mernames_by_teamname(default_team_name))
     
@@ -188,8 +196,8 @@ class ConfOut:
 
         # 刷碎片的同时，升级未满级的佣兵
         rest_mers = self.mer_conf.get_less30_mercenaries()
-        if len(rest_mers) > self.get_empty_mer_lst_cnt():
-            rest_mers = rest_mers[0:(self.get_empty_mer_lst_cnt())]
+        # if len(rest_mers) > self.get_empty_mer_lst_cnt():
+        #     rest_mers = rest_mers[0:(self.get_empty_mer_lst_cnt())]
         if len(rest_mers) > 0:
             self.add_mercenaries(rest_mers)
         # 设置攻击副本
@@ -199,12 +207,16 @@ class ConfOut:
     def set_update_model(self, mer_names):
         self.instance_method = '随机打'
         self.mer_team_setting.clear()
-        self.add_mercenaries(self.base_conf.get_mer_names_by_team_name('自然队'))
+        # 随机找个已经有了的队伍：
+        for team_name in ['自然队','巴斯顿','御三家']:
+            if len(self.mer_conf.not_exist_mers(self.base_conf.get_mer_names_by_team_name(team_name))) <= 0:
+                self.add_mercenaries(self.base_conf.get_mer_names_by_team_name(team_name))
+                break
         self.add_mercenaries(mer_names)
         # 如果还有空位，则补上其他未满级的佣兵
         rest_mers = self.mer_conf.get_less30_mercenaries()
-        if len(rest_mers) > self.get_empty_mer_lst_cnt():
-            rest_mers = rest_mers[0:(self.get_empty_mer_lst_cnt())]
+        # if len(rest_mers) > self.get_empty_mer_lst_cnt():
+        #     rest_mers = rest_mers[0:(self.get_empty_mer_lst_cnt())]
         if len(rest_mers) > 0:
             self.add_mercenaries(rest_mers)
         
@@ -225,6 +237,19 @@ class ConfOut:
                 break
             self.add_mercenaries([mer_name])
 
+    # 设置 +1+5 刷碎片毕业模式
+    def set_frag_model(self, mer_names):
+        self.team_target_instances = {'副本':'1-1','难度':'普通'}
+        if len(mer_names) >= 2:
+            self.team_target_instances['难度'] = {'英雄'}
+        self.is_task = True
+        self.mer_team_setting.clear()
+        self.add_mercenaries(mer_names)
+        # for mer_name in self.mer_conf.get_fragment_mercenaries():
+        #     if len(self.mer_team_setting) >= 3:
+        #         break
+
+
     
     # 设置 英雄本解锁装备模式
     def set_hero_instance_equip_model(self):
@@ -238,10 +263,13 @@ class ConfOut:
         mer_names = [x for x in mer_names if x not in self.mer_team_setting]
         if len(mer_names) <= 0:
             return None
-        if len(mer_names) + len(self.mer_team_setting) > 6:
-            print('ERR 总佣兵超过6个。当前:{} ，新加:{}'.format(self.get_mer_names(), mer_names))
-            return None
+        # if len(mer_names) + len(self.mer_team_setting) > 6:
+        #     print('ERR 总佣兵超过6个。当前:{} ，新加:{}'.format(self.get_mer_names(), mer_names))
+        #     return None
         for name in mer_names:
+            if len(self.mer_team_setting) >= 6:
+                print('佣兵队伍已经满员:{}'.format(self.get_mer_names()))
+                break
             add_mer = self.base_conf.get_mer_conf(name)
             add_mer['默认出场顺序'] = len(self.mer_team_setting) + 1
             self.mer_team_setting[name] = copy.deepcopy(add_mer)
@@ -292,15 +320,42 @@ if __name__ == '__main__':
     # 获取当前文件所在目录
     # 打印当前工作目录
     print(os.getcwd())
-    conf_out = ConfOut( mer_stat_path='/Users/allen/code/ws_py/mercenary/mercenaries_sailing181#3954_2023_03_11_11_50_23.csv')
-    for team_name in (conf_out.base_conf.get_teamnames() + ['ALL']):
+    mer_stat_path = '/Users/allen/code/ws_py/mercenary/mercenaries_sailing181#3954_2023_03_11_11_50_23.csv'
+    yml_out_path = './mer_conf.yml'
+    conf_out = ConfOut( mer_stat_path=mer_stat_path)
+    for team_name in ['御三家', '自然队', '巴斯顿', 'ALL']:
+        print('开始检测队伍 {}'.format(team_name))
         mers = conf_out.base_conf.get_mer_names_by_team_name(team_name)
-        non_mers = conf_out.mer_conf.get_non_mer(mers)
+        non_mers = conf_out.mer_conf.get_no_mercenaries(mers)
         if len( non_mers ) > 0:
             print("{} 存在未解锁的英雄. 尝试解锁英雄：{}".format(team_name,non_mers))
             if '御三家' in team_name:
                 print(' ERROR, 御三家 有 {} 未解锁，请先手动做主线任务解锁'.format(non_mers))
                 continue
             conf_out.set_non_frag_model(need_mers=non_mers)
-            conf_out.yaml_output('./mer_conf.yml')
+            conf_out.yaml_output(yml_out_path)
+            break
+        else:
+            #TODO: 刷英雄装备。前提是需要先知道哪些英雄的装备没解锁，哪些英雄的装备解锁了
+            less_30_mers = conf_out.mer_conf.get_less30_mercenaries(mers)
+            if len(less_30_mers) > 0:
+                print('{} 存在未满级的英雄: {}, 开始升级'.format(team_name,less_30_mers))
+                conf_out.set_update_model(mer_names=less_30_mers)
+                conf_out.yaml_output(yml_out_path)
+                break
+            else:
+                less_task_7_mers = conf_out.mer_conf.get_task_mercenaries(mers)
+                if len(less_task_7_mers) > 0:
+                    print('{} 存在任务不到7的英雄:{}, 开始做任务'.format(team_name,less_task_7_mers))
+                    conf_out.set_task_model(less_task_7_mers)
+                    conf_out.yaml_output(yml_out_path)
+                    break
+                else:
+                    less_frag_mers = conf_out.mer_conf.get_fragment_mercenaries(mers)
+                    if len(less_frag_mers) > 0:
+                        print('{} 中{}没有+1+5,开始刷'.format(team_name,less_frag_mers))
+                        conf_out.set_frag_model(less_frag_mers)
+                        conf_out.yaml_output(yml_out_path)
+                        break
+        
         
