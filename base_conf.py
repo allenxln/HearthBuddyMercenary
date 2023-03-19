@@ -166,7 +166,7 @@ class ConfOut:
         self.hit_method = hit_method #选怪模式
         self.all_target = '货车 冷饮 祝踏岚 尤格 克洛 盖斯 大帝 欧莫克 奥妮克希亚幼龙 恩佐斯的鱼 德雷 拉佐格尔 女皇 加尔 雪崩 冰吼 碎片 巫师 宝宝 图腾 猫头鹰 安度因 艾萨拉 拉格 占卜 瓦莉拉 猎手 巨兽 战斗法师 防御者幼龙 雷矛羊骑兵 瞎眼 复仇 船长 指挥官 食人鱼 龙王 古尔丹 罗杰斯 休息 螳螂塑像 火山幼龙 塞林 火焰领主 雷矛特种兵 傀儡 始祖龟 奥秘 走私 酒吧醉汉 迦顿 维伦 反射 恐吓 剑鱼 雷矛 巨人 虚空 猛犸 雕像 冰雪 军需官 老瞎眼 冰霜暴怒者 图腾 奶牛 瓦拉 雷矛狂战士 小丑 暗月 恩佐斯 牛怪 奴隶 火焰驱逐者 迦罗娜 守卫 毒心者 雷矛防御者 女妖 将军'.split(' ') #集火目标，list格式
         self.avoid_mer = '精灵龙 塔姆辛 古尔丹 安度因 晨拥 塞林 沃金 米尔 安东尼 老瞎眼 伊利丹 雷矛 刀油 瓦莉拉'.split(' ')
-        self.team_target_instances = {} #队伍设置内设置的目标关卡
+        self.team_target_instances = [] #队伍设置内设置的目标关卡
         self.extra_mer = {'绝命':1,'冰墙':0, '战棋':2,'黑棋':1,'宝珠':0,'冰块':0}
         if len(default_team_name) > 0:
             self.add_mercenaries(self.mer_conf.get_mernames_by_teamname(default_team_name))
@@ -202,11 +202,11 @@ class ConfOut:
         if len(rest_mers) > 0:
             self.add_mercenaries(rest_mers)
         # 设置攻击副本
-        self.team_target_instances = {'副本':first_instance,'难度':'普通'}
+        self.team_target_instances = ['{} 普通'.format(first_instance)]
 
     # 设置 升级模式。
     def set_update_model(self, mer_names):
-        self.instance_method = '随机打'
+        self.instance_method = '随机打[普通]'
         self.mer_team_setting.clear()
         # 随机找个已经有了的队伍：
         for team_name in ['自然队','巴斯顿','御三家']:
@@ -224,7 +224,7 @@ class ConfOut:
 
     # 设置 任务1-7模式
     def set_task_model(self, mer_names):
-        self.team_target_instances = {'副本':'1-2','难度':'英雄'}
+        self.team_target_instances = ['1-2 英雄']
         self.mer_team_setting.clear()
         self.add_mercenaries(mer_names)
         self.is_task = True
@@ -240,9 +240,9 @@ class ConfOut:
 
     # 设置 +1+5 刷碎片毕业模式
     def set_frag_model(self, mer_names):
-        self.team_target_instances = {'副本':'1-1','难度':'普通'}
+        self.team_target_instances = ['1-1 普通']
         if len(mer_names) >= 3:
-            self.team_target_instances['难度'] = {'英雄'}
+            self.team_target_instances = ['1-1 英雄']
         self.is_task = True
         self.mer_team_setting.clear()
         self.add_mercenaries(mer_names)
@@ -300,7 +300,7 @@ class ConfOut:
     
     def yaml_output(self, outpath):
         # 将字典转换为 YAML 格式的字符串
-        all_dict = {'允许交任务':self.is_task,
+        all_dict = {'允许做任务':self.is_task,
                     '关卡方式':self.instance_method,
                     '队伍设置':{'佣兵配置':copy.deepcopy(self.mer_team_setting),
                                 '事件':copy.deepcopy(self.events),
@@ -363,7 +363,7 @@ if __name__ == '__main__':
                 else:
                     less_frag_mers = conf_out.mer_conf.get_fragment_mercenaries(mers)
                     if len(less_frag_mers) > 0:
-                        print('{} 中{}没有+1+5,开始刷'.format(team_name,less_frag_mers))
+                        print('{} 中{}没有+1+5(或者剩余碎片不到2700),开始刷碎片'.format(team_name,less_frag_mers))
                         conf_out.set_frag_model(less_frag_mers)
                         conf_out.yaml_output(yml_out_path)
                         break
