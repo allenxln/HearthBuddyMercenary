@@ -8,6 +8,7 @@ import os
 import copy
 import json
 import yaml
+import sys
 
 class BaseConf:
     def __init__(self) -> None:
@@ -240,11 +241,16 @@ class ConfOut:
     # 设置 +1+5 刷碎片毕业模式
     def set_frag_model(self, mer_names):
         self.team_target_instances = {'副本':'1-1','难度':'普通'}
-        if len(mer_names) >= 2:
+        if len(mer_names) >= 3:
             self.team_target_instances['难度'] = {'英雄'}
         self.is_task = True
         self.mer_team_setting.clear()
         self.add_mercenaries(mer_names)
+        if len(self.mer_team_setting) <= 3:
+            # 刷普通1-1的利器
+            for mer_name in ['拉格纳罗斯', '暴龙王克鲁什']:
+                if self.mer_conf.get_min_level([mer_name]) > 0:
+                    self.add_mercenaries([mer_name])
         # for mer_name in self.mer_conf.get_fragment_mercenaries():
         #     if len(self.mer_team_setting) >= 3:
         #         break
@@ -315,13 +321,17 @@ class ConfOut:
         print(self.mer_conf['佣兵']['拉格纳罗斯']['碎片来源'])
 
 
+# python ./base_conf.py 该python文件将佣兵配置输出到哪个路径的哪个文件下面 脚本出来的佣兵文件的路径 ...
 if __name__ == '__main__':
     import os
     # 获取当前文件所在目录
     # 打印当前工作目录
     print(os.getcwd())
-    mer_stat_path = '/Users/allen/code/ws_py/mercenary/mercenaries_sailing181#3954_2023_03_11_11_50_23.csv'
     yml_out_path = './mer_conf.yml'
+    mer_stat_path = '/Users/allen/code/ws_py/mercenary/mercenaries_sailing181#3954_2023_03_11_11_50_23.csv'
+    if len(sys.argv) >= 3:
+        yml_out_path = sys.argv[1]
+        mer_stat_path = sys.argv[2]
     conf_out = ConfOut( mer_stat_path=mer_stat_path)
     for team_name in ['御三家', '自然队', '巴斯顿', 'ALL']:
         print('开始检测队伍 {}'.format(team_name))
