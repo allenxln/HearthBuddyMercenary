@@ -6,7 +6,7 @@ import copy
 import json
 import yaml
 
-from base_conf import BaseConf
+from base_conf import BaseConf, MercenariesInfo
 
 class ConfOut:
     def __init__(self,default_team_name = '', 
@@ -19,6 +19,7 @@ class ConfOut:
                  extra_mer = {'绝命':1},
                  ) -> None:
         self.base_conf = BaseConf()  #佣兵基础配置
+        self.mer_conf = MercenariesInfo()
         self.mer_team_conf = {}  #佣兵队伍设置。key是佣兵名
         self.is_task = is_task #是否允许做任务
         self.instance_method = instance_method #“关卡”这个位置的字段。
